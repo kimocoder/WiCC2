@@ -400,13 +400,16 @@ class View:
 
         :author: Pablo Sanz Alguacil
         """
-        select_window = filedialog.askopenfilename(parent=self.root,
-                                                   initialdir='/home',
-                                                   title='Choose wordlist file',
-                                                   filetypes=[('Text files', '.txt'),
-                                                              ('List files', '.lst'),
-                                                              ("All files", "*.*")])
-        if select_window:
+        if select_window := filedialog.askopenfilename(
+            parent=self.root,
+            initialdir='/home',
+            title='Choose wordlist file',
+            filetypes=[
+                ('Text files', '.txt'),
+                ('List files', '.lst'),
+                ("All files", "*.*"),
+            ],
+        ):
             try:
                 self.send_notify(Operation.SELECT_CUSTOM_WORDLIST, select_window)
             except:
@@ -420,14 +423,16 @@ class View:
 
         :author: Pablo Sanz Alguacil
         """
-        if self.interfaceVar.get() != "":
-            current_mac_alert = self.popup_gen.yesno("", "Your current MAC is: " + self.current_mac()
-                                                     + "\n\nAre you sure you want to change it? ")
-            if current_mac_alert:
-                self.send_notify(Operation.RANDOMIZE_MAC, self.interfaceVar.get())
-                self.popup_gen.info("", "Your new MAC is: " + self.current_mac())
-        else:
+        if self.interfaceVar.get() == "":
             self.popup_gen.warning("", "No interface selected. Close the window and select one")
+
+        elif current_mac_alert := self.popup_gen.yesno(
+            "",
+            f"Your current MAC is: {self.current_mac()}"
+            + "\n\nAre you sure you want to change it? ",
+        ):
+            self.send_notify(Operation.RANDOMIZE_MAC, self.interfaceVar.get())
+            self.popup_gen.info("", f"Your new MAC is: {self.current_mac()}")
 
     def customize_mac(self, new_mac):
         """
@@ -438,15 +443,18 @@ class View:
         :author: Pablo Sanz Alguacil
         """
 
-        if self.interfaceVar.get() != "":
-            current_mac_alert = self.popup_gen.yesno("", "Your current MAC is: " + self.current_mac()
-                                                     + "\n\nAre you sure you want to change it for\n" +
-                                                     new_mac + " ?")
-            if current_mac_alert:
-                self.send_notify(Operation.CUSTOMIZE_MAC, (self.interfaceVar.get(), new_mac))
-                self.popup_gen.info("", "Your new MAC is: " + self.current_mac())
-        else:
+        if self.interfaceVar.get() == "":
             self.popup_gen.warning("", "No interface selected. Close the window and select one")
+
+        elif current_mac_alert := self.popup_gen.yesno(
+            "",
+            f"Your current MAC is: {self.current_mac()}"
+            + "\n\nAre you sure you want to change it for\n"
+            + new_mac
+            + " ?",
+        ):
+            self.send_notify(Operation.CUSTOMIZE_MAC, (self.interfaceVar.get(), new_mac))
+            self.popup_gen.info("", f"Your new MAC is: {self.current_mac()}")
 
     def restore_mac(self):
         """
@@ -456,14 +464,16 @@ class View:
         :author: Pablo Sanz Alguacil
         """
 
-        if self.interfaceVar.get() != "":
-            current_mac_alert = messagebox.askyesno("", "Your current MAC is: " + self.current_mac()
-                                                    + "\n\nAre you sure you want to restore original?")
-            if current_mac_alert:
-                self.send_notify(Operation.RESTORE_MAC, self.interfaceVar.get())
-                self.popup_gen.info("", "Your new MAC is: " + self.current_mac())
-        else:
+        if self.interfaceVar.get() == "":
             self.popup_gen.warning("", "No interface selected. Close the window and select one")
+
+        elif current_mac_alert := messagebox.askyesno(
+            "",
+            f"Your current MAC is: {self.current_mac()}"
+            + "\n\nAre you sure you want to restore original?",
+        ):
+            self.send_notify(Operation.RESTORE_MAC, self.interfaceVar.get())
+            self.popup_gen.info("", f"Your new MAC is: {self.current_mac()}")
 
     def spoofing_mac(self, status):
         """
@@ -521,17 +531,26 @@ class View:
 
         if interfaces:
             self.interfaces_old = interfaces
-            interfaces_list = []
-            for item in interfaces:
-                interfaces_list.append(item[0])
+            interfaces_list = [item[0] for item in interfaces]
             self.interfaces_combobox['values'] = interfaces_list
             self.interfaces_combobox.update()
 
         self.networks_old = networks
         self.networks_treeview.delete(*self.networks_treeview.get_children())
         for item in networks:
-            self.networks_treeview.insert("", END, text=item[13], values=(item[0], item[1], item[4], item[6],
-                                                                          item[9] + " dbi", item[16]))
+            self.networks_treeview.insert(
+                "",
+                END,
+                text=item[13],
+                values=(
+                    item[0],
+                    item[1],
+                    item[4],
+                    item[6],
+                    f"{item[9]} dbi",
+                    item[16],
+                ),
+            )
             self.networks_treeview.update()
 
     def current_mac(self):
@@ -610,7 +629,7 @@ class View:
         if value:
             self.set_buttons(False)
             self.button_stop_scan['state'] = DISABLED
-        elif not value:
+        else:
             self.set_buttons(True)
 
     def generate_wordlists_window(self):
@@ -630,10 +649,9 @@ class View:
         :author: Pablo Sanz Alguacil
         """
 
-        select_window = filedialog.askdirectory(parent=self.root,
-                                                initialdir='/home',
-                                                title='Choose directory')
-        if select_window:
+        if select_window := filedialog.askdirectory(
+            parent=self.root, initialdir='/home', title='Choose directory'
+        ):
             try:
                 self.send_notify(Operation.SELECT_TEMPORARY_FILES_LOCATION, select_window)
 
@@ -673,18 +691,14 @@ class View:
         :author: Pablo Sanz Alguacil
         """
 
-        if state:
-            status = ACTIVE
-        else:
-            status = DISABLED
-
+        status = ACTIVE if state else DISABLED
         for button in buttons:
-            if button == "scan_wpa":
-                self.button_scan_wpa['state'] = status
+            if button == "attack_wep":
+                self.button_start_attack_wep['state'] = status
             elif button == "attack_wpa":
                 self.button_start_attack_wpa['state'] = status
-            elif button == "attack_wep":
-                self.button_start_attack_wep['state'] = status
+            elif button == "scan_wpa":
+                self.button_scan_wpa['state'] = status
             elif button == "select network":
                 self.button_select_network['state'] = status
 

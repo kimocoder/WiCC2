@@ -59,7 +59,7 @@ class EncryptionType:
         if self.verbose_level == 3:
             output = "[Command]:  "
             for word in command:
-                output += word + " "
+                output += f"{word} "
             self.show_message("\033[1;30m" + output + "\033[0m")
 
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -77,9 +77,21 @@ class EncryptionType:
         airmon_start_cmd = ['airmon-ng', 'start', self.interface, self.channel]
         self.interface += 'mon'
         airmon_check_cmd = ['airmon-ng', 'check', 'kill']
-        airodump_scan_cmd = ['airodump-ng', self.interface, '-a', '--bssid', self.bssid, '--write',
-                             self.write_directory + '/net_attack_' + str(self.timestamp), '--channel', self.channel,
-                             '--write-interval', '2', '--output-format', 'pcap']
+        airodump_scan_cmd = [
+            'airodump-ng',
+            self.interface,
+            '-a',
+            '--bssid',
+            self.bssid,
+            '--write',
+            f'{self.write_directory}/net_attack_{self.timestamp}',
+            '--channel',
+            self.channel,
+            '--write-interval',
+            '2',
+            '--output-format',
+            'pcap',
+        ]
         self.execute_command(airmon_start_cmd)
         self.execute_command(airmon_check_cmd)
         thread = threading.Thread(target=self.execute_command, args=(airodump_scan_cmd,))

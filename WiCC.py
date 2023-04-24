@@ -145,7 +145,7 @@ if __name__ == '__main__':
     if some_missing:
         # variable 'software' is an array of pair [tool_name, boolean_if_its_installed]
         print("The following software is not installed:\n")
-        for i in range(0, len(software)):
+        for i in range(len(software)):
             if not software[i][1]:
                 print("\t***Missing " + software[i][0])
         print("\n")

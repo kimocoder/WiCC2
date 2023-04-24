@@ -94,22 +94,21 @@ class Control:
         Sets the object references, and sets the main directory with pwd
         The selected interface semaphore is initialized as released, the others as acquired
         """
-        if not Control.__instance:
-            self.main_directory = os.path.realpath(__file__)[:-((len("wicc_control.py"))+1)]
-            self.model = ""
-            self.model = Model()
-            self.view = View(self, self.main_directory)
-            self.popup = PopUpWindow()
-            self.local_folder = self.main_directory + self.local_folder
-            self.selected_wordlist = self.main_directory + self.selected_wordlist
-            self.__instance = self
-
-            self.semStartScan.acquire(False)
-            self.semRunningScan.acquire(False)
-            self.semStoppedScan.acquire(False)
-            self.semStopRunning.acquire(False)
-        else:
+        if Control.__instance:
             raise Exception("Singleton Class")
+        self.main_directory = os.path.realpath(__file__)[:-((len("wicc_control.py"))+1)]
+        self.model = ""
+        self.model = Model()
+        self.view = View(self, self.main_directory)
+        self.popup = PopUpWindow()
+        self.local_folder = self.main_directory + self.local_folder
+        self.selected_wordlist = self.main_directory + self.selected_wordlist
+        self.__instance = self
+
+        self.semStartScan.acquire(False)
+        self.semRunningScan.acquire(False)
+        self.semStoppedScan.acquire(False)
+        self.semStopRunning.acquire(False)
 
     def start_view(self):
         """
@@ -131,7 +130,7 @@ class Control:
         if self.verbose_level == 3:
             output = "[Command]:  "
             for word in command:
-                output += word + " "
+                output += f"{word} "
             self.show_message("\033[1;30m" + output + "\033[0m")
 
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -243,7 +242,7 @@ class Control:
         mandatory_msg = "The following tool(s) are required to be able to run the program:\n"
         optional_msg = "The following tool(s) are not mandatory but highly recommended to run the software:\n"
 
-        for i in range(0, len(self.required_software)):
+        for i in range(len(self.required_software)):
             out, err = self.execute_command(['which', self.required_software[i][0]])
 
             if int.from_bytes(out, byteorder="big") != 0:
@@ -257,7 +256,7 @@ class Control:
                         stop_execution = True
                         # Stops running if any mandatory software is missing
 
-                        mandatory_msg += " - " + missing_software + "\n"
+                        mandatory_msg += f" - {missing_software}" + "\n"
 
                 if (missing_software not in optional_msg) and (missing_software not in mandatory_msg):
                     optional_msg += "\n  - " + missing_software
@@ -346,7 +345,7 @@ class Control:
         names_interfaces = []
 
         for line in interfaces:
-            if line[:1] != " " and line[:1] != "":
+            if line[:1] not in [" ", ""]:
                 info = line.split(" ")
                 info = info[0].split(":")
 
@@ -375,7 +374,7 @@ class Control:
             if interface[0] == "":
                 interface[0] = line[0]
             if "Mode" in lines:
-                for i in range(0, len(line)):
+                for i in range(len(line)):
                     if "Mode" in line[i]:
                         str = line[i].split(":")
                         interface[2] = str[1]
@@ -434,12 +433,12 @@ class Control:
 
         self.scan_stopped = False
 
-        tempfile = self.write_directory + "/net_scan_"
+        tempfile = f"{self.write_directory}/net_scan_"
 
         self.execute_command(['mkdir', self.write_directory])
 
         airmon_cmd = ['airmon-ng', 'start', self.selected_interface]
-        interface = self.selected_interface + 'mon'
+        interface = f'{self.selected_interface}mon'
         self.execute_command(airmon_cmd)
 
         self.timestamp = int(datetime.datetime.now().timestamp() * 1000000)  # multiplied to get the full timestamp
@@ -448,12 +447,9 @@ class Control:
         command = ['airodump-ng', interface, '--write', tempfile, '--output-format', 'csv']
 
         if self.scan_filter_parameters[0] != "ALL":
-            command.append('--encrypt')
-            command.append(self.scan_filter_parameters[0])
+            command.extend(('--encrypt', self.scan_filter_parameters[0]))
         if self.scan_filter_parameters[1] != "ALL":
-            command.append('--channel')
-            command.append(self.scan_filter_parameters[1])
-
+            command.extend(('--channel', self.scan_filter_parameters[1]))
         filter_thread = multiprocessing.Process(target=self.execute_command, args=(command,))
         filter_thread.start()
         self.process_pool.append(filter_thread)
@@ -469,7 +465,7 @@ class Control:
 
         :Author: Miguel Yanes Fernández
         """
-        tempfile = self.write_directory + "/net_scan_"
+        tempfile = f"{self.write_directory}/net_scan_"
         tempfile += str(self.timestamp)
         tempfile += '-01.csv'
 
@@ -500,7 +496,9 @@ class Control:
                 # check if the problem was because the interface was already in monitor mode, and try to fix it
                 if self.selected_interface[-3:] == 'mon':
                     self.selected_interface = self.selected_interface[:-3]
-                    self.show_message("Interface was already in monitor mode, resetting to: " + self.selected_interface)
+                    self.show_message(
+                        f"Interface was already in monitor mode, resetting to: {self.selected_interface}"
+                    )
                     self.stop_scan()
                     self.scan_networks()
                     return True
@@ -522,12 +520,12 @@ class Control:
                 if err == b'':
                     # if there is no error when resetting the wireless card
                     exception_msg += "\n\nThe error may be fixed automatically. " \
-                                     "Please close this window and re-select the network interface." \
-                                     "\n\nIf this error persists, close the program and re-plug your wireless card"
+                                         "Please close this window and re-select the network interface." \
+                                         "\n\nIf this error persists, close the program and re-plug your wireless card"
                 else:
                     # if there is an error when resetting the wireless card. The users must solve this by themselves.
                     exception_msg += "\n\nThe error couldn't be fixed automatically. Please reconnect or reconfigure " \
-                                     "your wireless card"
+                                         "your wireless card"
                     self.show_message(Exception.args)
                 self.show_warning_notification(exception_msg)
                 self.view.set_buttons(True)
@@ -596,22 +594,23 @@ class Control:
 
         :Author: Miguel Yanes Fernández
         """
-        if not self.get_running_stopped():
-            interfaces, networks = self.model.get_parameters()
+        if self.get_running_stopped():
+            return
+        interfaces, networks = self.model.get_parameters()
+        try:
+            self.view.get_notify(interfaces, networks)
+        except:
             try:
+                # sometimes works the second time because the resource was busy
+                time.sleep(1)
+                self.show_message("Error communicating control with view, retrying...")
                 self.view.get_notify(interfaces, networks)
+                self.show_message("Success")
             except:
-                try:
-                    # sometimes works the second time because the resource was busy
-                    time.sleep(1)
-                    self.show_message("Error communicating control with view, retrying...")
-                    self.view.get_notify(interfaces, networks)
-                    self.show_message("Success")
-                except:
-                    self.show_message("\t* Error while notifying view (try restarting the program)")
-                    self.show_error_notification("Fatal error", "Error communicating with the view.\n"
-                                                                "Try restarting the program")
-                    self.get_notify(Operation.STOP_RUNNING, None)
+                self.show_message("\t* Error while notifying view (try restarting the program)")
+                self.show_error_notification("Fatal error", "Error communicating with the view.\n"
+                                                            "Try restarting the program")
+                self.get_notify(Operation.STOP_RUNNING, None)
 
     def get_notify(self, operation, value):
         """
@@ -727,7 +726,7 @@ class Control:
             for pid in pids:
                 if pid != "":
                     self.execute_command(['kill', '-9', pid])  # kills all processes related with airodump
-        airmon_cmd = ['airmon-ng', 'stop', self.selected_interface + 'mon']  # stop card to be in monitor mode
+        airmon_cmd = ['airmon-ng', 'stop', f'{self.selected_interface}mon']
         ifconf_up_cmd = ['ifconfig', self.selected_interface, 'up']  # sets the wireless interface up again
         net_man_cmd = ['NetworkManager']  # restarts NetworkManager
 
@@ -738,7 +737,9 @@ class Control:
         self.scan_stopped = True
 
         try:
-            out, err = self.execute_command(['rm', self.write_directory + '/net_scan_' + self.timestamp + '-01.csv'])
+            out, err = self.execute_command(
+                ['rm', f'{self.write_directory}/net_scan_{self.timestamp}-01.csv']
+            )
         except:
             pass
 
@@ -839,8 +840,7 @@ class Control:
 
     def get_wpa_status(self):
         network = self.model.search_network(self.selected_network)
-        net_attack = self.get_net_attack(network.get_bssid())
-        if net_attack:
+        if net_attack := self.get_net_attack(network.get_bssid()):
             return net_attack.get_status()
 
     def scan_wpa(self):
@@ -938,10 +938,10 @@ class Control:
         if network_encryption == " WEP":
             if self.spoof_mac:
                 attacker_mac = self.spoof_client_mac(self.selected_network)
-                self.show_message("Spoofed client MAC: " + attacker_mac)
+                self.show_message(f"Spoofed client MAC: {attacker_mac}")
             else:
                 attacker_mac = self.mac_checker(self.selected_interface, )
-                self.show_message("Attacker's MAC: " + attacker_mac)
+                self.show_message(f"Attacker's MAC: {attacker_mac}")
 
             self.show_message("WEP attack")
             self.net_attack = WEP(network, self.selected_interface, attacker_mac,
@@ -951,7 +951,6 @@ class Control:
             password = self.net_attack.scan_network()
             self.show_message("Cracking finished")
 
-        # ------------- WPA Attack ----------------
         elif network_encryption[:4] == " WPA":
             if self.selected_wordlist == "":
                 self.show_info_notification("You need to select a wordlist for the WPA attack")
@@ -968,7 +967,6 @@ class Control:
             self.cracking_network = False
             # pass
 
-        # ------------- Unsupported encryption -----------
         else:
             self.show_info_notification("Unsupported encryption type. Try selecting a WEP or WPA/WPA2 network")
 
@@ -981,7 +979,7 @@ class Control:
             self.create_local_folder()
             bssid = self.model.search_network(self.selected_network).get_bssid()
             essid = self.model.search_network(self.selected_network).get_essid()[1:]
-            self.store_local_file(self.passwords_file_name, bssid + " " + password + " " + essid)
+            self.store_local_file(self.passwords_file_name, f"{bssid} {password} {essid}")
         else:
             self.show_info_notification("Cracking process finished\n\nNo password retrieved"
                                         "\n\nYou can restart the scanning process")
@@ -1011,10 +1009,10 @@ class Control:
         :Author: Miguel Yanes Fernández
         """
         if not self.ignore_local_savefiles:
-            with open(self.local_folder + "/" + file_name, "a") as file:
+            with open(f"{self.local_folder}/{file_name}", "a") as file:
                 file.write(file_contents + "\n")
                 file.close()
-            chmod_cmd = ['chmod', '664', self.local_folder + "/" + file_name]
+            chmod_cmd = ['chmod', '664', f"{self.local_folder}/{file_name}"]
             self.execute_command(chmod_cmd)
 
     def read_local_file(self, file_name):
@@ -1027,7 +1025,7 @@ class Control:
         """
         if not self.ignore_local_savefiles:
             try:
-                with open(self.local_folder + "/" + file_name, "r") as file:
+                with open(f"{self.local_folder}/{file_name}", "r") as file:
                     return file.read()
             except:
                 self.show_message("There are no stored cracked networks")
@@ -1040,14 +1038,16 @@ class Control:
 
         :Author: Miguel Yanes Fernández
         """
-        contents = self.read_local_file(file_name)
-        if contents:
+        if contents := self.read_local_file(file_name):
             lines = contents.split("\n")
             for line in lines:
                 words = line.split()
-                if line != "":
-                    if words[0] == self.model.search_network(self.selected_network).get_bssid():
-                        return words[1]
+                if (
+                    line != ""
+                    and words[0]
+                    == self.model.search_network(self.selected_network).get_bssid()
+                ):
+                    return words[1]
         self.show_message("Selected network is not in the stored cracked networks list")
         return ""
 
@@ -1078,12 +1078,10 @@ class Control:
         :Author: Miguel Yanes Fernández
         """
         network = self.model.search_network(id)
-        if network.get_clients() != 0:
-            client = network.get_first_client()
-            client_mac = client.get_mac()
-            return client_mac
-        else:
+        if network.get_clients() == 0:
             return self.model.get_mac(self.selected_interface)
+        client = network.get_first_client()
+        return client.get_mac()
 
     def randomize_mac(self, interface):
         """
@@ -1099,14 +1097,13 @@ class Control:
         first_digit = self.hex_values[random.randint(0, 15)]
         second_digit = self.hex_values_even[random.randint(0, 6)]
         generated_address += first_digit + second_digit + ":"
-        for i in range(0, 4):
+        for _ in range(4):
             first_digit = self.hex_values[random.randint(0, 15)]
             second_digit = self.hex_values[random.randint(0, 15)]
             generated_address += first_digit + second_digit + ":"
-        else:
-            first_digit = self.hex_values[random.randint(0, 15)]
-            second_digit = self.hex_values[random.randint(0, 15)]
-            generated_address += first_digit + second_digit
+        first_digit = self.hex_values[random.randint(0, 15)]
+        second_digit = self.hex_values[random.randint(0, 15)]
+        generated_address += first_digit + second_digit
 
         self.customize_mac((interface, generated_address))
 
@@ -1167,7 +1164,7 @@ class Control:
         try:
             command = ['ifconfig', interface]
             current_mac = self.execute_command(command)[0].decode("utf-8").split(" ")
-            for i in range(0, len(current_mac)):
+            for i in range(len(current_mac)):
                 if current_mac[i] == "ether":
                     current_mac = current_mac[i + 1]
                     return current_mac
@@ -1203,19 +1200,17 @@ class Control:
 
         while exists:
             if index == 0:
-                file_name = self.generated_wordlist_name + ".txt"
+                file_name = f"{self.generated_wordlist_name}.txt"
             else:
-                file_name = self.generated_wordlist_name + "(" + str(index) + ").txt"
+                file_name = f"{self.generated_wordlist_name}({str(index)}).txt"
 
-            file_path = directory + "/" + file_name
+            file_path = f"{directory}/{file_name}"
             exists = os.path.isfile(file_path)
             index += 1
 
-        output_list = directory + "/" + file_name
+        output_list = f"{directory}/{file_name}"
         command = ['crunch', '0', '0', '-o', output_list, '-p']
-        for word in words_list:
-            command.append(word)
-
+        command.extend(iter(words_list))
         self.show_message("Generating custom wordlist")
         self.execute_command(command)
 
@@ -1247,7 +1242,7 @@ class Control:
 
         try:
             self.show_message("Opening passwords file")
-            passwords = self.local_folder + "/" + self.passwords_file_name
+            passwords = f"{self.local_folder}/{self.passwords_file_name}"
             open(passwords, 'r').close()  # just to raise an exception if the file doesn't exists
             command = ['xdg-open', passwords]
             cracked_pass_thread = multiprocessing.Process(target=self.execute_command, args=(command,))
@@ -1266,7 +1261,7 @@ class Control:
 
         network_mac = self.model.search_network(self.selected_network).get_bssid()
         interface = self.selected_interface
-        interface_mon = interface + "mon"
+        interface_mon = f"{interface}mon"
 
         airmon_start = ['airmon-ng', 'start', interface]
         check_kill = ['airmon-ng', 'check', 'kill']
@@ -1278,7 +1273,7 @@ class Control:
         self.execute_command(airmon_start)
         self.execute_command(check_kill)
         time.sleep(2)
-        for x in range(0, int(loops)):
+        for _ in range(int(loops)):
             self.execute_command(aireplay)
         time.sleep(2)
         self.execute_command(airmon_stop)
@@ -1305,7 +1300,7 @@ class Control:
             bssid = stdout.decode('utf-8').split(" ")[2]
 
             password = ""
-            cracked_passwords = self.local_folder + "/" + self.passwords_file_name
+            cracked_passwords = f"{self.local_folder}/{self.passwords_file_name}"
             with open(cracked_passwords, 'r') as passwords_list:
                 for line in passwords_list:
                     elements = line.split(" ")

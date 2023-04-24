@@ -53,16 +53,15 @@ class Client:
 
         :Author: Miguel Yanes Fernández
         """
-        list = []
-        list.append(self.client_id)
-        list.append(self.station_MAC)
-        list.append(self.first_seen)
-        list.append(self.first_seen)
-        list.append(self.last_seen)
-        list.append(self.power)
-        list.append(self.power)
-        list.append(self.packets)
-        list.append(self.bssid)
-        list.append(self.probed_bssids)
-
-        return list
+        return [
+            self.client_id,
+            self.station_MAC,
+            self.first_seen,
+            self.first_seen,
+            self.last_seen,
+            self.power,
+            self.power,
+            self.packets,
+            self.bssid,
+            self.probed_bssids,
+        ]

@@ -35,11 +35,11 @@ class Interface:
         :return: string with info about the interface parameters
         """
         output = ""
-        output.__add__("Name: " + self.name)
-        output.__add__(" Address: " + self.address)
-        output.__add__((" Type: " + self.type))
-        output.__add__((" Power: " + self.power))
-        output.__add__((" Channel: " + self.channel))
+        output.__add__(f"Name: {self.name}")
+        output.__add__(f" Address: {self.address}")
+        output.__add__(f" Type: {self.type}")
+        output.__add__(f" Power: {self.power}")
+        output.__add__(f" Channel: {self.channel}")
         return output
 
     def get_name(self):
@@ -77,10 +77,4 @@ class Interface:
         Creates a list with the parameters of the interface
         :return: list of parameters
         """
-        list = []
-        list.append(self.name)
-        list.append(self.address)
-        list.append(self.type)
-        list.append(self.power)
-        list.append(self.channel)
-        return list
+        return [self.name, self.address, self.type, self.power, self.channel]

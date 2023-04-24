@@ -67,7 +67,7 @@ class DoS:
 
         try:
             seconds = int(self.entry.get())
-            converted_time = str(int(seconds / 5))
+            converted_time = str(seconds // 5)
             int(self.entry.get())
             self.main_view.get_notify_childs(6, converted_time)
 

@@ -36,7 +36,6 @@ def rClicker(e):
         rmenu.tk_popup(e.x_root+40, e.y_root+10, entry="0")
     except TclError:
         print(' - rClick menu, something wrong')
-        pass
     return "break"
 
 
@@ -53,4 +52,3 @@ def rClickbinder(r):
                          func=rClicker, add='')
     except TclError:
         print(' - rClickbinder, something wrong')
-        pass

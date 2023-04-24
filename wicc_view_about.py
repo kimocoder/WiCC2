@@ -55,7 +55,7 @@ class About:
                                                           "\n\tMiguel Yanes Fernández")
         self.label_collaborators.pack(side=RIGHT)
 
-    def open_link(event):
+    def open_link(self):
         """
         Opens the URL on a new tab in the default web browser.
 

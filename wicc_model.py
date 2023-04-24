@@ -59,6 +59,10 @@ class Model:
         first_time_empty = False
         id = 1
 
+        handshake = False
+        password = ""
+        clients = 0
+
         for network in networks:
             # id = ""
             bssid = ""
@@ -74,17 +78,18 @@ class Model:
             ivs = 0
             lan_ip = ""
             essid = ""
-            handshake = False
-            password = ""
-            clients = 0
-
-            cont = 0
-
-            for pair in network:
+            for cont, pair in enumerate(network):
                 if cont == 0:
                     bssid = pair
                 elif cont == 1:
                     first_seen = pair
+                elif cont == 10:
+                    ivs = pair
+                elif cont == 11:
+                    lan_ip = pair
+                elif cont == 13:
+                    # parameter 12 shows the length of the essid, so it's not necessary
+                    essid = pair
                 elif cont == 2:
                     last_seen = pair
                 elif cont == 3:
@@ -101,17 +106,6 @@ class Model:
                     power = pair
                 elif cont == 9:
                     beacons = pair
-                elif cont == 10:
-                    ivs = pair
-                elif cont == 11:
-                    lan_ip = pair
-                elif cont == 13:
-                    # parameter 12 shows the length of the essid, so it's not necessary
-                    essid = pair
-                # handshake and password aren't read from the interface list
-
-                cont += 1
-
             if bssid == '':
                 if first_time_empty:
                     break
@@ -140,8 +134,7 @@ class Model:
             bssid = ""
             probed_bssids = ""
 
-            cont = 0
-            for pair in client:
+            for cont, pair in enumerate(client):
                 if cont == 0:
                     station_MAC = pair
                 elif cont == 1:
@@ -156,7 +149,6 @@ class Model:
                     bssid = pair
                 elif cont == 6:
                     probed_bssids = pair
-                cont += 1
             if bssid != ' (not associated) ':
                 client = Client(id, station_MAC, first_seen, last_seen, power, packets, bssid, probed_bssids)
                 list_clients.append(client)
@@ -196,19 +188,17 @@ class Model:
 
         :author: Miguel Yanes Fernández & Pablo Sanz Alguacil
         """
-        list_interfaces = []
-        for object in self.interfaces:
-            list_interfaces.append(object.get_list())
+        list_interfaces = [object.get_list() for object in self.interfaces]
         list_networks = []
 
         if self.network_filters[1]:
-            for network in self.networks:
-                if network.get_clients() != 0:
-                    list_networks.append(network.get_list())
+            list_networks.extend(
+                network.get_list()
+                for network in self.networks
+                if network.get_clients() != 0
+            )
         else:
-            for object in self.networks:
-                list_networks.append(object.get_list())
-
+            list_networks.extend(object.get_list() for object in self.networks)
         return list_interfaces, list_networks
 
     def search_network(self, network_id):
@@ -219,10 +209,14 @@ class Model:
 
         :Author: Miguel Yanes Fernández
         """
-        for network in self.networks:
-            if network.get_id() == network_id:
-                return network
-        return None
+        return next(
+            (
+                network
+                for network in self.networks
+                if network.get_id() == network_id
+            ),
+            None,
+        )
 
     def get_interfaces(self):
         """
@@ -294,8 +288,12 @@ class Model:
 
         :author: Miguel Yanes Fernández
         """
-        for i in range(0, len(self.net_attack_instances)):
-            if self.net_attack_instances[i][0] == mac:
-                return self.net_attack_instances[i][1]
-        return None
+        return next(
+            (
+                self.net_attack_instances[i][1]
+                for i in range(len(self.net_attack_instances))
+                if self.net_attack_instances[i][0] == mac
+            ),
+            None,
+        )
 

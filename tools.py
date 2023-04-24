@@ -12,12 +12,12 @@ if os.getuid() != 0:
 print("Creating shortcut...")
 
 cur_dir = os.path.realpath(__file__)[:-len("tools.py")]
-print("Current directory: " + cur_dir)
+print(f"Current directory: {cur_dir}")
 
 bin_dir = os.path.defpath.split(":")[2]
-print("OS bin directory: " + bin_dir)
+print(f"OS bin directory: {bin_dir}")
 
-link_cmd = "ln -s " + cur_dir + "WiCC.py " + bin_dir + "/wicc"
+link_cmd = f"ln -s {cur_dir}WiCC.py {bin_dir}/wicc"
 
 out = os.system(link_cmd)
 if out > 0:

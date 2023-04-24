@@ -75,23 +75,23 @@ class Network:
         :return: string of parameters
         """
         output = ""
-        output.__add__("ID: " + str(self.id))
-        output.__add__(" BSSID: " + self.bssid)
-        output.__add__(" First Seen: " + self.first_seen)
-        output.__add__(" Last Seen: " + self.last_seen)
-        output.__add__(" Channel: " + str(self.channel))
-        output.__add__(" Speed: " + str(self.speed))
-        output.__add__(" Privacy: " + self.privacy)
-        output.__add__(" Cipher:" + self.cipher)
-        output.__add__(" Authentication: " + self.authentication)
-        output.__add__(" Power: " + str(self.power))
-        output.__add__(" Beacons: " + str(self.beacons))
-        output.__add__(" IVs: " + str(self.ivs))
-        output.__add__(" LAN-IP: " + self.lan_ip)
-        output.__add__(" ESSID: " + self.essid)
-        output.__add__(" Handshake: " + str(self.handshake))
-        output.__add__(" Password: " + self.password)
-        output.__add__(" Clients: " + str(self.clients))
+        output.__add__(f"ID: {str(self.id)}")
+        output.__add__(f" BSSID: {self.bssid}")
+        output.__add__(f" First Seen: {self.first_seen}")
+        output.__add__(f" Last Seen: {self.last_seen}")
+        output.__add__(f" Channel: {str(self.channel)}")
+        output.__add__(f" Speed: {str(self.speed)}")
+        output.__add__(f" Privacy: {self.privacy}")
+        output.__add__(f" Cipher:{self.cipher}")
+        output.__add__(f" Authentication: {self.authentication}")
+        output.__add__(f" Power: {str(self.power)}")
+        output.__add__(f" Beacons: {str(self.beacons)}")
+        output.__add__(f" IVs: {str(self.ivs)}")
+        output.__add__(f" LAN-IP: {self.lan_ip}")
+        output.__add__(f" ESSID: {self.essid}")
+        output.__add__(f" Handshake: {str(self.handshake)}")
+        output.__add__(f" Password: {self.password}")
+        output.__add__(f" Clients: {str(self.clients)}")
         return output
 
     def get_list(self):
@@ -99,26 +99,26 @@ class Network:
         Generates a list with the class parameters
         :return: list of parameters (will be used by the view to print the networks)
         """
-        list = []
-        list.append(self.id)
-        list.append(self.bssid)
-        list.append(self.first_seen)
-        list.append(self.last_seen)
-        list.append(self.channel)
-        list.append(self.speed)
-        list.append(self.privacy)
-        list.append(self.cipher)
-        list.append(self.authentication)
-        list.append(self.power)
-        list.append(self.beacons)
-        list.append(self.ivs)
-        list.append(self.lan_ip)
-        list.append(self.essid)
-        list.append(self.handshake)
-        list.append(self.password)
-        list.append(self.num_clients)
-        list.append(self.clients)
-        return list
+        return [
+            self.id,
+            self.bssid,
+            self.first_seen,
+            self.last_seen,
+            self.channel,
+            self.speed,
+            self.privacy,
+            self.cipher,
+            self.authentication,
+            self.power,
+            self.beacons,
+            self.ivs,
+            self.lan_ip,
+            self.essid,
+            self.handshake,
+            self.password,
+            self.num_clients,
+            self.clients,
+        ]
 
     def add_client(self, client):
         """
